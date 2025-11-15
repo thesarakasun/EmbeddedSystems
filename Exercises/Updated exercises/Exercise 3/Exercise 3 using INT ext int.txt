@@ -1,0 +1,69 @@
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <util/delay.h>
+
+// Global variables
+volatile uint8_t ClickCount = 0;
+volatile uint8_t display_active = 0;
+
+int main(void) {
+    // Setup
+    DDRB = 0b00000111;  // PB0, PB1, PB2 as outputs (LEDs)
+    DDRD = 0b11110011;  // PD2, PD3 as inputs (buttons)
+    PORTD = 0b00001100; // Enable pull-ups on PD2, PD3
+    
+    // Interrupt configuration
+    EICRA = 0b00001010; // INT0 and INT1 on falling edge
+    EIMSK = 0b00000011; // Enable INT0 and INT1
+    sei();
+    
+    // Initial state - all LEDs off
+    PORTB = 0b00000000;
+    
+    while (1) {
+        // Main loop just handles LED display
+        if (display_active) {
+            // Show binary count on LEDs (PB0 = LSB, PB1, PB2 = MSB)
+            PORTB = ClickCount & 0b00000111;
+        } else {
+            // Turn off all LEDs
+            PORTB = 0b00000000;
+        }
+    }
+}
+
+ISR(INT0_vect) {
+    // Count button - only works when not displaying
+    if (!display_active) {
+        // Simple debounce delay
+        _delay_ms(50);
+        
+        // Increment count (0-7)
+        ClickCount++;
+        if (ClickCount > 7) {
+            ClickCount = 0;
+        }
+        
+        // Wait for button release
+        while ((PIND & 0b00000100) == 0);
+        _delay_ms(50);
+    }
+}
+
+ISR(INT1_vect) {
+    // Display toggle button
+    _delay_ms(50); // Debounce
+    
+    if (display_active) {
+        // Switching FROM display mode TO counting mode
+        display_active = 0;
+        ClickCount = 0; // Reset count for next time
+    } else {
+        // Switching FROM counting mode TO display mode
+        display_active = 1;
+    }
+    
+    // Wait for button release
+    while ((PIND & 0b00001000) == 0);
+    _delay_ms(50);
+}

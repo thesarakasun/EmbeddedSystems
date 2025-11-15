@@ -1,0 +1,43 @@
+#include<avr/io.h>
+
+int main(void){
+
+DDRB =  0b00001111 ;
+DDRD =  0b00000000 ;
+PORTD = 0b00110000 ; 
+TCCR0B = 0b00000111 ;
+TCNT0 = 0 ;
+
+ prevState = 1;
+uint8_t display = 0;
+
+while(1){
+
+  uint8_t state = (PIND & 0b00100000)?1:0;
+
+  if(prevState && !state){
+
+    if(display){
+      TCNT0 = 0 ;
+      PORTB = 0b00000000;
+      display=0;
+    }
+    else
+    {
+      uint8_t count = TCNT0   ;
+      PORTB = (PORTB & 0b11110000) | count ; 
+      display=1;
+    
+    }
+
+
+ 
+
+
+  }
+  
+
+ prevState=state;
+}
+}
+
