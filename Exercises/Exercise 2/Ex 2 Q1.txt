@@ -1,0 +1,37 @@
+        SBI DDRB,0
+        CBI DDRD,2
+        SBI PORTD,2
+START:  SBIS PIND,2
+        RJMP FAST_BLINK
+        RJMP SLOW_BLINK
+FAST_BLINK : SBI PORTB,0
+             CALL DELAYF
+             CBI PORTB,0
+             CALL DELAYF
+             JMP START
+SLOW_BLINK : SBI PORTB,0
+             CALL DELAYS
+             CBI PORTB,0
+             CALL DELAYS
+             JMP START
+DELAYF: LDI R16,16
+
+LOOP1:  LDI R17,255
+LOOP2:  LDI R18,255
+LOOP3:  DEC R18
+        BRNE LOOP3
+        DEC R17
+        BRNE LOOP2
+        DEC R16
+        BRNE LOOP1
+        RET
+DELAYS: LDI R16,32
+LOOP1:  LDI R17,255
+LOOP2:  LDI R18,255
+LOOP3:  DEC R18
+        BRNE LOOP3
+        DEC R17
+        BRNE LOOP2
+        DEC R16
+        BRNE LOOP1
+        RET
